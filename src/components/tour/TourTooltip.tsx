@@ -202,7 +202,7 @@ export const TourTooltip: React.FC = () => {
       {currentStep.businessValue && (
         <div className="mt-3.5 p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1">
           <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-[8px] font-black tracking-widest text-blue-600 uppercase">
               Impacto de Negocio
             </span>
@@ -223,7 +223,7 @@ export const TourTooltip: React.FC = () => {
               onClick={() => goToStep(i)}
               className={`h-1.5 rounded-full transition-all duration-300 ${
                 i === currentStepIndex
-                  ? 'w-4 bg-blue-600'
+                  ? 'w-4 bg-primary'
                   : 'w-1.5 bg-zinc-200 hover:bg-zinc-400'
               }`}
               title={`Ir al paso ${i + 1}`}
@@ -245,7 +245,7 @@ export const TourTooltip: React.FC = () => {
 
           <button
             onClick={nextStep}
-            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1 cursor-pointer"
+            className="px-3.5 py-1.5 bg-primary hover:bg-primary/90 active:scale-95 text-neutral-50 rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1 cursor-pointer"
           >
             {currentStep.actionLabel || 'Siguiente'}
             <ChevronRight className="w-3.5 h-3.5" />

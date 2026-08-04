@@ -102,7 +102,7 @@ export const WelcomeModal: React.FC = () => {
 
             <button
               onClick={startTour}
-              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/10 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2.5 bg-primary hover:bg-primary/90 active:scale-95 text-neutral-50 rounded-xl text-xs font-bold shadow-md shadow-primary/10 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               Comenzar Recorrido
               <Compass className="w-4 h-4" />

@@ -294,7 +294,7 @@ export default function WorkOrderDetailModal({
         {/* Header Block */}
         <div className="px-6 py-4 bg-zinc-950 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center font-black text-white text-sm shadow-md">
+            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center font-black text-neutral-50 text-sm shadow-md">
               OT
             </div>
             <div>

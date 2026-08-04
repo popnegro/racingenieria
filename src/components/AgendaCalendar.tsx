@@ -259,7 +259,7 @@ export default function AgendaCalendar({
                   </button>
                   <button
                     type="submit"
-                    className="text-[10px] font-bold bg-blue-600 text-white hover:bg-blue-700 px-3 py-1 rounded"
+                    className="px-3 py-1.5 bg-primary hover:bg-primary/90 text-neutral-50 font-bold text-xs rounded-md shadow-sm hover:shadow-md transition-all whitespace-nowrap cursor-pointer flex items-center gap-1"
                   >
                     Agregar
                   </button>

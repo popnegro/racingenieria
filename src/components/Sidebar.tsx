@@ -1,6 +1,7 @@
 import React from 'react';
 import { LayoutDashboard, Building2, Wrench, Calendar, History, BarChart2, ChevronLeft, ChevronRight, Cpu } from 'lucide-react';
 import { Operator } from '../types';
+import logo from '../assets/images/rac-brand.jpg';
 
 interface SidebarProps {
   id: string;
@@ -23,7 +24,7 @@ export default function Sidebar({
   isCollapsed,
   setIsCollapsed
 }: SidebarProps) {
-  
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard Principal', icon: LayoutDashboard },
     { id: 'customers', label: 'Clientes Industriales', icon: Building2 },
@@ -35,10 +36,9 @@ export default function Sidebar({
 
   return (
     <aside
-      id={id}
-      className={`bg-zinc-950 text-zinc-100 h-screen border-r border-zinc-800 flex flex-col justify-between transition-all duration-300 select-none ${
-        isCollapsed ? 'w-[72px]' : 'w-[260px]'
-      }`}
+      id={id} role="navigation" aria-label="Main navigation"
+      className={`bg-zinc-950 text-zinc-100 h-screen border-r border-zinc-800 flex flex-col justify-between transition-all duration-300 select-none ${isCollapsed ? 'w-[72px]' : 'w-[260px]'
+        }`}
     >
       {/* Top Brand Block */}
       <div>
@@ -46,9 +46,9 @@ export default function Sidebar({
           {!isCollapsed ? (
             <div className="flex items-center gap-3">
               <div className="w-10 h-8 rounded bg-white p-0.5 flex items-center justify-center shadow-sm overflow-hidden border border-zinc-700">
-                <img 
-                  src="https://racingenieria.com.ar/inicio/wp-content/uploads/2026/05/marca_racTM2.jpg" 
-                  alt="RAC Logo" 
+                <img
+                  src={logo}
+                  alt="RAC Logo"
                   className="max-h-full max-w-full object-contain"
                   referrerPolicy="no-referrer"
                 />
@@ -60,9 +60,9 @@ export default function Sidebar({
             </div>
           ) : (
             <div className="w-10 h-8 rounded bg-white p-0.5 flex items-center justify-center shadow-sm overflow-hidden border border-zinc-700 mx-auto">
-              <img 
-                src="https://racingenieria.com.ar/inicio/wp-content/uploads/2026/05/marca_racTM2.jpg" 
-                alt="RAC Logo" 
+              <img
+                src={logo}
+                alt="RAC Logo"
                 className="max-h-full max-w-full object-contain"
                 referrerPolicy="no-referrer"
               />
@@ -71,6 +71,8 @@ export default function Sidebar({
 
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
+            aria-expanded={!isCollapsed}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             className="p-1 hover:bg-zinc-800 rounded text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer hidden md:block"
           >
             {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -86,11 +88,10 @@ export default function Sidebar({
               <button
                 key={item.id}
                 onClick={() => setActiveView(item.id)}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20 font-extrabold'
-                    : 'hover:bg-zinc-900 text-zinc-400 hover:text-zinc-100'
-                }`}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${isActive
+                        ? 'bg-primary text-neutral-50 shadow-md shadow-primary/20 font-extrabold'
+                        : 'hover:bg-zinc-900 text-zinc-400 hover:text-zinc-100'
+                      }`}
               >
                 <Icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? 'text-white stroke-[2.2]' : 'text-zinc-400'}`} />
                 {!isCollapsed && <span className="truncate">{item.label}</span>}

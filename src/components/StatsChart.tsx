@@ -37,8 +37,8 @@ export default function StatsChart({
     blue: {
       stroke: '#2563eb',
       fill: 'rgba(37, 99, 235, 0.15)',
-      barBg: 'bg-blue-600',
-      text: 'text-blue-600'
+      barBg: 'bg-primary',
+      text: 'text-primary'
     },
     indigo: {
       stroke: '#4f46e5',

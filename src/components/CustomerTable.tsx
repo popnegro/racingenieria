@@ -236,21 +236,21 @@ export default function CustomerTable({
                     <div className="flex items-center justify-end gap-1.5">
                       <button
                         onClick={() => onSelectCustomer(customer)}
-                        className="p-1.5 hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 rounded-md transition-colors"
+                        className="p-1.5 hover:bg-primary text-neutral-50 hover:text-white rounded-md transition-colors"
                         title="Ver Perfil Detallado"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onInitiateCall(customer)}
-                        className="p-1.5 hover:bg-zinc-100 text-zinc-400 hover:text-emerald-600 rounded-md transition-colors"
+                        className="p-1.5 hover:bg-primary text-neutral-50 hover:text-white rounded-md transition-colors"
                         title="Iniciar Registro de Llamada"
                       >
                         <Phone className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onInitiateEmail(customer)}
-                        className="p-1.5 hover:bg-zinc-100 text-zinc-400 hover:text-blue-600 rounded-md transition-colors"
+                        className="p-1.5 hover:bg-primary text-neutral-50 hover:text-white rounded-md transition-colors"
                         title="Enviar Correo Electrónico"
                       >
                         <Mail className="w-4 h-4" />
@@ -308,7 +308,7 @@ export default function CustomerTable({
                 onClick={() => setCurrentPage(pageNum)}
                 className={`w-7.5 h-7.5 text-xs font-semibold rounded-md flex items-center justify-center transition-all cursor-pointer ${
                   currentPage === pageNum
-                    ? 'bg-blue-600 text-white shadow-sm font-bold'
+                    ? 'bg-primary text-neutral-50 shadow-sm font-bold'
                     : 'border border-zinc-200 hover:bg-white text-zinc-600'
                 }`}
               >

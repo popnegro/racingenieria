@@ -224,10 +224,10 @@ export const PersonalizationDialog: React.FC<PersonalizationDialogProps> = ({
             <button
               onClick={handleSave}
               className={`px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer ${
-                saveSuccess
-                  ? 'bg-emerald-600 text-white shadow-emerald-600/10'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/10'
-              }`}
+                  saveSuccess
+                    ? 'bg-emerald-600 text-white shadow-emerald-600/10'
+                    : 'bg-primary hover:bg-primary/90 text-neutral-50 shadow-primary/10'
+                }`}
             >
               {saveSuccess ? (
                 <>

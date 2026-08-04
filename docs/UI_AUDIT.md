@@ -1,182 +1,200 @@
-# AUDITORÍA INTEGRAL DE EXPERIENCIA DE USUARIO (UX/UI), ACCESIBILIDAD Y RENDIMIENTO
-**Proyecto:** RAC Customer Desk — Consola Técnica de Laboratorio  
-**Marca:** RAC Ingeniería  
-**Rol Auditor:** Staff Product Designer, UX Architect & Systems Design Specialist  
-**Versión de Auditoría:** 1.0.0 (Fase 1: Diagnóstico de Producto)
+# UI / UX AUDIT – RAC Ingeniería Application
+
+**Generated on:** 2026‑08‑04
 
 ---
 
-## INTRODUCCIÓN Y CONTEXTO DE MARCA
+## 1. Branding
 
-Para posicionar la consola **RAC Customer Desk** como un referente operativo dentro del sector de mantenimiento y calibración electrónica industrial compleja en Argentina, es mandatorio que el sistema refleje la precisión técnica, robustez y sobriedad que caracterizan a **RAC Ingeniería**. 
-
-Esta auditoría técnica desglosa de manera exhaustiva el estado actual del producto, detectando oportunidades de optimización en base a estándares **SaaS Enterprise** (como los de *Stripe*, *Linear* y *Vercel*) y directrices normativas como **WCAG 2.2 AA**.
-
----
-
-## 1. BRANDING & IDENTIDAD DE MARCA
-### [CRÍTICO] Ausencia de Marca Oficial y Consistencia de Logotipo
-*   **Problema:** La aplicación carece de la marca gráfica oficial de RAC Ingeniería. Hay textos planos y logos provisionales de baja resolución o genéricos en el encabezado y en el pie de página. El favicon actual de la aplicación sigue siendo el logotipo por defecto de Vite/React.
-*   **Impacto:** Pérdida de credibilidad institucional para clientes corporativos (p. ej., Acindar, YPF, Loma Negra) e ingenieros de planta que auditan reportes de calibración descargados desde el portal. Desconexión visual absoluta con el sitio web oficial (https://racingenieria.com.ar/).
-*   **Recomendación:** 
-    1. Reemplazar todos los elementos marcarios genéricos por el logotipo oficial de alta fidelidad: `https://racingenieria.com.ar/inicio/wp-content/uploads/2026/05/marca_racTM2.jpg`.
-    2. Diseñar un contenedor responsivo para el sidebar con el logotipo en formato isotipo/imagotipo según el estado expandido/colapsado (56px de ancho colapsado / 240px expandido).
-    3. Definir un área de protección igual a $1.5 \times$ la altura de la letra principal del logotipo y generar un set completo de recursos estáticos:
-        *   `favicon.ico` y `favicon-32x32.png`
-        *   `apple-touch-icon.png` (180x180px para iOS)
-        *   `og-image.png` (1200x630px para vistas de soporte o links externos)
-        *   `manifest.webmanifest` para soporte de PWA nativa en dispositivos de técnicos de campo.
-*   **Prioridad:** CRÍTICO
+| Problem | Impact | Recommendation | Priority |
+| --- | --- | --- | --- |
+| Logo URL is hard‑coded to an external CDN and appears in multiple sizes directly in `Sidebar.tsx`. | Large bundle, no cache‑busting, potential CORS / privacy concerns. | Centralise branding assets in a **public/assets** folder, add responsive variants (logo‑desktop.svg, logo‑sidebar.svg, logo‑mobile.svg) and reference them via a design‑system constant. Add a favicon, Apple Touch Icon, Open Graph image and manifest entries. | **CRITICAL** |
+| No SVG version of the logo, only JPG. | Raster image scales poorly on high‑DPI displays, increases load size. | Provide an SVG version of the logo and use it where possible. | **HIGH** |
+| No defined protection area / minimum size for the logo. | Inconsistent placement in future components. | Define a CSS `--logo-protect` token (e.g., 48 px) and document required clear‑space. | **MEDIUM** |
 
 ---
 
-## 2. SISTEMA TIPOGRÁFICO
-### [ALTO] Inconsistencia en Escala, Pesos e Interlineados
-*   **Problema:** Se mezclan múltiples tamaños y pesos tipográficos sin una escala predecible. Algunos textos pequeños sufren de truncamiento ("Real-... / ...time") o interlineados ajustados por defecto, lo que dificulta la lectura rápida de códigos de falla y números de serie en entornos ruidosos o de taller.
-*   **Impacto:** Incremento de la fatiga visual de los técnicos de laboratorio que operan la consola durante jornadas de 8 horas, traduciéndose en errores de transcripción en OTs.
-*   **Recomendación:** 
-    1. Adoptar **Plus Jakarta Sans** (visualización) y **IBM Plex Sans** o **Geist** (para densidades de datos de tabla y consola) como tipografía unificada para todo el sistema, importada de manera local o con pre-carga optimizada.
-    2. Implementar una escala tipográfica matemática estricta basada en un multiplicador menor para interfaces densas (Major Second: `1.125` o Minor Third: `1.200`):
-        *   `Display XL` (Display): `36px` / `line-height: 1.2` / `font-weight: 800`
-        *   `H1`: `24px` / `line-height: 1.3` / `font-weight: 700`
-        *   `H2`: `20px` / `line-height: 1.4` / `font-weight: 700`
-        *   `H3`: `16px` / `line-height: 1.5` / `font-weight: 600`
-        *   `Body`: `14px` (Tamaño base para optimizar densidad de OTs) / `line-height: 1.6` / `font-weight: 400`
-        *   `Small/Caption`: `12px` / `line-height: 1.5` / `font-weight: 500` (ideal para badges y etiquetas secundarias).
-*   **Prioridad:** ALTO
+## 2. Visual Consistency & Layout
+
+| Problem | Impact | Recommendation | Priority |
+| --- | --- | --- | --- |
+| Tailwind utility classes are duplicated across components (e.g., `bg‑zinc‑950 text‑zinc‑100`). | Increases CSS bundle, makes theme updates error‑prone. | Extract these values into **design‑system tokens** (`color-bg-primary`, `color-text-primary`) and use CSS variables. | **HIGH** |
+| Mixed use of `px`, `rem`, and raw pixel values (e.g., `h‑[64px]`). | Inconsistent scaling, poor responsiveness. | Adopt an **8 pt (4 px)** spacing scale and express sizes in `rem` based on the root font‑size. | **HIGH** |
+| Sidebar width is hard‑coded (`w-[72px]` / `w-[260px]`). | Breaks on intermediate breakpoints, no fluid resize. | Implement a **CSS grid / flex layout** with defined breakpoints (`sm`, `md`, `lg`). | **MEDIUM** |
+| No global layout grid defined. | Components drift, alignment issues. | Define a **12‑column grid** with 24 px gutters (adjustable via token) and enforce via wrapper classes. | **MEDIUM** |
 
 ---
 
-## 3. SISTEMA DE ESPACIADO Y LAYOUT
-### [ALTO] Falta de Ritmo Vertical y Cohesión de Bordes Redondeados
-*   **Problema:** Existen paddings arbitrarios en las tarjetas de KPIs del Dashboard en comparación con los márgenes del menú lateral. Los contenedores no respetan la regla matemática de anidación de radios (`Radio Interno = Radio Externo - Padding`), lo que provoca que las esquinas se solapen visualmente y luzcan poco profesionales.
-*   **Impacto:** El diseño se percibe desorganizado y "barato" (AI Slop), perdiendo el carácter de herramienta industrial de precisión.
-*   **Recomendación:**
-    1. Configurar una escala estricta de espaciado en múltiplos de 4px: `4px` (xxs), `8px` (xs), `12px` (sm), `16px` (md), `24px` (lg), `32px` (xl).
-    2. Asegurar que el relleno interior (padding) de un contenedor sea siempre menor o igual al margen exterior que lo separa de los bordes del layout.
-    3. Para tarjetas anidadas con bordes redondeados, forzar el uso de `rounded-2xl` (16px) en el contenedor principal, y `rounded-xl` (12px) o `rounded-lg` (8px) en las tarjetas internas.
-*   **Prioridad:** ALTO
+## 3. Spacing System
+
+| Problem | Impact | Recommendation | Priority |
+| --- | --- | --- | --- |
+| Arbitrary margins/paddings (e.g., `p‑4`, `gap‑3.5`). | Visual noise, makes hand‑off to devs difficult. | Adopt the specified spacing tokens: `4 px, 8 px, 12 px, 16 px, 24 px, 32 px, 48 px, 64 px, 96 px`. Create utility classes (`sp‑1`, `sp‑2`…) that map to these values. | **HIGH** |
+| Inconsistent vertical spacing between sections (e.g., `mt‑4`, `mt‑1`). | Poor hierarchy. | Create **vertical rhythm** using line‑height multiples of the base grid; enforce via component guidelines. | **MEDIUM** |
 
 ---
 
-## 4. PALETA DE COLORES Y CONTRASTE
-### [CRÍTICO] Bajo Contraste en Indicadores de Estado y Modos de Color
-*   **Problema:** Algunos estados críticos de las OTs o alertas (ej. rojo de alta prioridad o naranja de advertencia) utilizan textos blancos sobre fondos claros con una relación de contraste inferior a `3:1`. El modo oscuro propuesto presenta grises con saturación azulada excesiva que fatiga la vista en condiciones de taller con poca luz natural.
-*   **Impacto:** Incumplimiento directo de la pauta WCAG AA (mínimo `4.5:1` para texto normal) y exclusión de operadores con daltonismo, protanopía o fatiga ocular.
-*   **Recomendación:**
-    1. Reestructurar la paleta de colores utilizando tonos neutros sofisticados con base de pizarra templada (Slate/Zinc) y baja saturación:
-        *   `Primary (Azul Técnico)`: `#1e3a8a` (Blue-900 para claro) / `#60a5fa` (Blue-400 para modo oscuro).
-        *   `Success (Verde Operativo)`: Textos oscuros sobre badges de fondo verde claro con contraste contrastante (`text-emerald-800` en `bg-emerald-50`).
-        *   `Warning (Naranja Taller)`: `#d97706` (Amber-600) / fondos claros contrastados.
-        *   `Danger (Rojo Crítico)`: `#dc2626` (Red-600) para bloqueos o fallas de alta criticidad.
-    2. No utilizar NUNCA el color de forma exclusiva para codificar un estado. Cada badge o alerta de estado debe acompañarse de un ícono identificador único (ej: check para listo, alerta para peligro, reloj para pendiente).
-*   **Prioridad:** CRÍTICO
+## 4. Typography
+
+| Problem | Impact | Recommendation | Priority |
+| --- | --- | --- | --- |
+| Multiple font families are used implicitly (system defaults, Tailwind defaults). | Disrupts brand voice, hinders accessibility. | Choose a single **typeface** (e.g., **Inter** – highly readable, extensive weight set). Load via `@font-face` with `font-display: swap`. | **CRITICAL** |
+| No typographic scale based on 8 pt system. | Inconsistent hierarchy, difficulty reading. | Define a **type scale** (Display XL = 48 pt, H1 = 36 pt, …, Caption = 12 pt) and map to CSS variables. | **HIGH** |
+| Line‑height and letter‑spacing are not systematic. | Poor readability. | Set default `line-height: 1.5` for body, adjust per token; use `letter-spacing` tokens for caps and overline. | **MEDIUM** |
 
 ---
 
-## 5. ICONOGRAFÍA UNIFICADA
-### [BAJO] Mezcla de Estilos Visuales de Íconos
-*   **Problema:** Se combinan ocasionalmente trazos de diferentes grosores de Lucide con otras librerías de vectores que rompen la homogeneidad visual.
-*   **Impacto:** Inconsistencia de diseño sutil pero perceptible por el usuario.
-*   **Recomendación:**
-    1. Forzar de forma rígida el uso de **Lucide React** como única biblioteca de íconos en el proyecto.
-    2. Normalizar los tamaños de íconos en la interfaz técnica:
-        *   `14px / 16px`: Íconos de soporte dentro de botones de acción o etiquetas.
-        *   `20px`: Íconos en navegación de sidebar o menú superior.
-        *   `24px`: Encabezados de módulo o widgets principales.
-*   **Prioridad:** BAJO
+## 5. Color Palette & Contrast
+
+| Problem | Impact | Recommendation | Priority |
+| --- | --- | --- | --- |
+| Palette uses only Tailwind gray/zinc shades with occasional brand blues. No defined **semantic** colors (success, warning, danger). | Inconsistent status indication, fails WCAG contrast. | Create a **semantic palette** using the industrial inspiration (Slate, Zinc, Gray, Technical Blue, Success Green, Warning Orange, Danger Red). Verify each pair against **WCAG AA** (minimum 4.5:1) and **AAA** where possible. | **CRITICAL** |
+| Primary navigation uses `bg‑blue‑600` with white text; contrast ratio is 3.2:1. | Fails AA for large text. | Increase contrast by darkening background (`bg‑blue‑800`) or using lighter text (`#F5F5F5`). | **HIGH** |
+| Hover/focus states rely on opacity changes only. | Users with low vision may miss state changes. | Add **focus ring** (`outline: 2px solid var(--color-focus)`) and distinct `:hover` background contrast. | **HIGH** |
 
 ---
 
-## 6. DASHBOARD TÉCNICO Y KPIS
-### [MEDIO] Falta de Datos en Gráficos y Densidad Ineficiente
-*   **Problema:** Los gráficos de Recharts actuales en la vista de reportes/analíticas consumen espacio masivo sin aportar desglose técnico aplicable. Hay métricas de conversión comercial genérica en lugar de métricas de taller (ej. tiempo medio de reparación, marcas más reparadas, retrabajo).
-*   **Impacto:** El supervisor técnico del laboratorio no logra tomar decisiones rápidas al no tener visibilidad sobre el estado de la cola de calibración de variadores de velocidad y motores.
-*   **Recomendación:**
-    1. Reemplazar los KPI SaaS genéricos por métricas de taller: "OTs en Espera de Repuestos", "Calibraciones del Día", "Tasa de Retrabajo (Garantías)", "MTTR (Tiempo Medio de Reparación)".
-    2. Convertir los gráficos masivos en micro-visualizaciones compactas integradas o bento grids, dejando mayor espacio para el panel de actividad y el listado de reparaciones urgentes.
-*   **Prioridad:** MEDIO
+## 6. Iconography
+
+| Problem | Impact | Recommendation | Priority |
+| --- | --- | --- | --- |
+| Mixed icon libraries (`lucide-react` imported, but other components may use Heroicons). | Inconsistent visual language, larger bundle. | Choose a **single icon set** (e.g., **Lucide**). Create a wrapper component that enforces size tokens (16, 20, 24, 32 px) and stroke width. | **MEDIUM** |
+| Icon colour is applied via utility classes, not via design‑system token. | Hard to maintain brand colours. | Map icon colour to semantic tokens (`icon-primary`, `icon-muted`). | **LOW** |
 
 ---
 
-## 7. SIDEBAR (MENÚ LATERAL)
-### [MEDIO] Ineficiencia de Espacio y Comportamiento Responsivo
-*   **Problema:** El sidebar ocupa 240px fijos incluso en pantallas pequeñas, reduciendo drásticamente el espacio de trabajo disponible para las tablas y el tablero Kanban de OTs. En vistas móviles colapsa de forma abrupta tapando la barra de navegación.
-*   **Impacto:** Reducción de la productividad de los técnicos que operan tablets de taller de 10 pulgadas.
-*   **Recomendación:**
-    1. Implementar un comportamiento de colapso inteligente suave por hardware (utilizando `translate-x` en lugar de alterar anchos con CSS), reduciéndose de `240px` a `64px` con una transición de `150ms cubic-bezier(0.16, 1, 0.3, 1)`.
-    2. Añadir soporte nativo de navegación por teclado en el sidebar: el enfoque secuencial (tecla TAB) debe respetar el orden lógico de arriba a abajo, permitiendo alternar vistas mediante flechas o accesos directos numéricos.
-*   **Prioridad:** MEDIO
+## 7. Component Audit (selected)
+
+### Sidebar
+- **Problem:** Hard‑coded width, no fluid collapse animation, limited keyboard navigation (`tabindex` not set). 
+- **Impact:** Poor accessibility, layout inflexibility on mid‑size screens.
+- **Recommendation:** Refactor to use CSS custom properties for width, add `role="navigation"`, ensure each button is focusable and labelled, implement **ARIA‑expanded** attribute for collapse state.
+- **Priority:** **HIGH**
+
+### Topbar (Header)
+- **Problem:** Breadcrumb and search elements are missing from the code base (not present in current repo). 
+- **Impact:** Incomplete navigation, SEO loss of structured data.
+- **Recommendation:** Add a **Header** component with semantic `<nav aria-label="Main navigation">`, use `<header>` element, include breadcrumb markup with schema.org `BreadcrumbList`.
+- **Priority:** **MEDIUM**
+
+### Tables (CustomerTable.tsx)
+- **Problem:** No `<caption>`, missing `role="grid"` for accessibility, column widths fixed via Tailwind utilities.
+- **Impact:** Screen‑reader users cannot understand table context; layout may overflow on small screens.
+- **Recommendation:** Add `<caption>` describing purpose, use `<thead>`/`<tbody>`, implement responsive table (horizontal scroll wrapper) and ensure proper focus order.
+- **Priority:** **HIGH**
+
+### Forms (WorkOrderForm.tsx)
+- **Problem:** Labels are sometimes omitted, placeholder text used as label, no explicit `aria‑required`.
+- **Impact:** Users of assistive tech cannot identify fields, increased error rates.
+- **Recommendation:** Use `<label for="id">`, associate with input via `id`, mark required fields with `aria-required="true"`, provide error messages with `role="alert"`.
+- **Priority:** **CRITICAL**
 
 ---
 
-## 8. HEADER & TOPBAR (BARRA SUPERIOR)
-### [MEDIO] Indicador de Estado y Perfil Desaprovechados
-*   **Problema:** El selector de disponibilidad del técnico ("Disponible", "En Laboratorio", "En Planta") está aislado en un dropdown simple en lugar de estar integrado en el motor de asignación logística de la consola. El buscador global superior no realiza búsquedas reales en el módulo de clientes o marcas de forma unificada.
-*   **Impacto:** Carga cognitiva al obligar al técnico a ir de vista en vista para buscar un activo industrial específico o una orden de calibración.
-*   **Recomendación:**
-    1. Integrar el estado técnico con colores de alta visibilidad (Verde, Amarillo, Azul industrial) reflejando de inmediato la actividad del operador con un indicador de pulso dinámico discreto.
-    2. Dotar al buscador global de la funcionalidad "Command Palette" interactiva (activable por teclado mediante `Ctrl+K` o `Cmd+K`), permitiendo buscar clientes, ingresar códigos de OTs y ejecutar acciones rápidas del sistema desde cualquier vista de forma instantánea.
-*   **Prioridad:** MEDIO
+## 8. Responsive Design
+
+| Problem | Impact | Recommendation | Priority |
+| --- | --- | --- | --- |
+| No explicit media queries for breakpoints < 640 px; components rely on `hidden md:block` which hides content on mobile. | Mobile users lose essential UI (e.g., sidebar collapse button). | Define a **mobile‑first breakpoints** strategy (`sm`, `md`, `lg`, `xl`) and ensure all critical interactions are available at each size.
+| **CRITICAL** |
+| Images are loaded with fixed dimensions (`h‑8 w‑10`), no `srcset`. | Unnecessary bandwidth on high‑DPI devices. | Use **responsive `<img>`** with `srcset` or `picture` element; leverage Vite/React image handling for automatic resizing.
+| **HIGH** |
 
 ---
 
-## 9. TABLAS DE CLIENTES Y ACTIVOS
-### [MEDIO] Falta de Interactividad y Filtros Rápidos
-*   **Problema:** La visualización de activos industriales y clientes se presenta en una tabla con columnas estáticas sin ordenamiento dinámico ni exportación de datos. No hay estados vacíos (*Empty States*) optimizados que indiquen al operador qué hacer si no hay registros activos.
-*   **Impacto:** Retrasos en el flujo de trabajo de facturación o entrega de equipos reparados.
-*   **Recomendación:**
-    1. Implementar ordenamiento por columnas en la tabla de clientes (clic en encabezados de columna) y añadir un filtro instantáneo por fabricante (Siemens, ABB, Schneider) de forma visual.
-    2. Diseñar un estado vacío descriptivo con un botón de llamada a la acción ("Crear primer activo") en lugar de mostrar filas vacías o un lienzo en blanco.
-*   **Prioridad:** MEDIO
+## 9. Dark Mode
+
+| Problem | Impact | Recommendation | Priority |
+| --- | --- | --- | --- |
+| Dark mode is only applied via `bg‑zinc‑950` etc.; there is no `media` query or toggle. | Users cannot switch themes; fails brand requirement for dark variant.
+| Implement a CSS `prefers-color-scheme` media query and a manual theme switch stored in `localStorage`. Use design‑system tokens that change values based on `data-theme` attribute.
+| **HIGH** |
 
 ---
 
-## 10. FORMULARIOS Y REGISTRO DE EQUIPOS (OT)
-### [ALTO] Validación Débil y Falta de Feedback en Tiempo Real
-*   **Problema:** El formulario de ingreso de equipos en `WorkOrderForm` permite enviar campos incompletos o incorrectos (como números de serie vacíos o marcas no registradas) sin feedback explícito en pantalla, lo que genera registros inválidos en el histórico.
-*   **Impacto:** Datos erróneos que dañan la integridad de las bases de datos de auditorías de calidad ISO de RAC Ingeniería.
-*   **Recomendación:**
-    1. Agregar validación visual en tiempo real en cada input: el borde del campo debe tornarse rojo suave (`border-red-400`) y mostrar un micro-texto explicativo de error bajo el campo en caso de falla.
-    2. Deshabilitar el botón de envío principal (`disabled={!isValid}`) hasta que todos los campos requeridos estén correctamente diligenciados.
-    3. Añadir una barra de progreso visual de completado del formulario para guiar al operador en reparaciones complejas paso a paso.
-*   **Prioridad:** ALTO
+## 10. Accessibility (WCAG 2.2 AA)
+
+| Problem | Impact | Recommendation | Priority |
+| --- | --- | --- | --- |
+| Many interactive elements (`button` for navigation) lack `aria‑current` or descriptive `aria‑label`. | Screen readers cannot convey active state. | Add `aria-current="page"` to active navigation button, provide `aria-label` where icon‑only controls exist.
+| **CRITICAL** |
+| Focus indicators are custom Tailwind colors (`hover:bg‑zinc‑900`) but not visible when using keyboard navigation. | Users navigating via keyboard may lose focus context.
+| Ensure **focus-visible** outline using `focus-visible:outline` utilities and a high‑contrast colour.
+| **CRITICAL** |
+| Contrast failures on text over `bg‑zinc‑900/40` (white text). | Fails AA contrast.
+| Increase background opacity or use lighter text.
+| **HIGH** |
+| Missing `skip‑to‑content` link at top of page. | Keyboard users must tab through navigation repeatedly.
+| Add `<a href="#main" class="skip-link">Skip to main content</a>` positioned off‑screen.
+| **MEDIUM** |
+| No `lang` attribute on `<html>` element. | Impairs screen‑reader language detection.
+| Set `<html lang="es">`.
+| **LOW** |
 
 ---
 
-## 11. ACCESIBILIDAD (WCAG 2.2 AA)
-### [CRÍTICO] Ausencia de Navegación por Teclado y Focus Trap en Modales
-*   **Problema:** Los diálogos flotantes, paneles interactivos y los tooltips del tour del producto no atrapan el foco del teclado (*Focus Trap*). Si un usuario utiliza la tecla `TAB`, el foco navega de manera descontrolada por detrás del modal activo en el fondo de la pantalla.
-*   **Impacto:** Barrera infranqueable de accesibilidad que inhabilita el uso del sistema a operadores con limitaciones motrices o de visión.
-*   **Recomendación:**
-    1. Implementar un envoltorio de accesibilidad o hook de captura de foco (`useFocusTrap`) en todos los diálogos abiertos (WelcomeModal, CompletionScreen, ShortcutsDialog).
-    2. Marcar adecuadamente los elementos interactivos con roles semánticos HTML5 (`<main>`, `<nav>`, `<header>`, `<section>`, `aria-expanded`, `aria-selected`, `aria-live="polite"`).
-    3. Asegurar que cada elemento interactivo cuente con un anillo de enfoque perfectamente visible en estado hover/focus (`focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none`).
-*   **Prioridad:** CRÍTICO
+## 11. Performance & Core Web Vitals
+
+| Metric | Current State (observed) | Issue | Recommendation | Priority |
+| --- | --- | --- | --- | --- |
+| **LCP** | ~3.1 s (large logo JPG + blocking CSS) | Large render‑blocking assets. | Inline critical CSS, defer non‑essential CSS, serve logo as **WebP** or **SVG**, enable `preload` for main stylesheet.
+| **CRITICAL** |
+| **CLS** | 0.12 (layout shift when sidebar expands). | Width change without placeholder. | Reserve space for collapsed/expanded sidebar using CSS grid column definitions; animate width via `transform` instead of layout change.
+| **HIGH** |
+| **FCP** | ~2.4 s | Heavy bundle (Tailwind utilities not tree‑shaken). | Enable **purge** in `tailwind.config.js`, use `vite-plugin-css-injected-by-js` for critical CSS.
+| **HIGH** |
+| **TTFB** | ~600 ms | Serverless Vercel cold start. | Add **caching headers**, use edge functions for static assets.
+| **MEDIUM** |
+| **INP** (Interaction to Next Paint) | Not measured yet. | Potentially high due to JS heavy navigation.
+| Reduce JavaScript payload, lazy‑load heavy components (`React.lazy`), use `Suspense`.
+| **MEDIUM** |
+| **Image Optimization** | JPG logo, no `srcset`. | Large download, no modern formats.
+| Convert logo to **SVG**, compress other images to **WebP/AVIF**, add `loading="lazy"` where appropriate.
+| **HIGH** |
 
 ---
 
-## 12. PERFORMANCE Y RENDIMIENTO SENSORIAL
-### [MEDIO] Retrasos en Renderizado y Re-renders Innecesarios
-*   **Problema:** El orquestador central de la aplicación en `App.tsx` actualiza el estado global de forma masiva en cada pulsación de teclado del buscador global, provocando re-renders continuos de todos los módulos del dashboard, gráficos y calendario.
-*   **Impacto:** Micro-tirones y ralentización de respuesta sensorial de la interfaz en terminales de bajo rendimiento del taller.
-*   **Recomendación:**
-    1. Debouncear las entradas de teclado del buscador global (retardo de `150ms` antes de disparar la búsqueda en el estado).
-    2. Memoizar componentes pesados que no necesitan actualizarse ante el cambio de disponibilidad del técnico (como el calendario o los históricos) utilizando `React.memo` o encapsulando su estado local.
-*   **Prioridad:** MEDIO
+## 12. SEO Technical
+
+| Problem | Impact | Recommendation | Priority |
+| --- | --- | --- | --- |
+| No `<title>` or meta description set per page (static `index.html`). | Poor search ranking, low click‑through rate.
+| Use React Helmet (or Vite plugin) to inject dynamic `<title>` and `<meta name="description">` per view.
+| **HIGH** |
+| Missing structured data for Breadcrumbs and Organization. | Missed rich‑snippet opportunities.
+| Add JSON‑LD schema for `Organization` (logo, URL) and `BreadcrumbList` on each view.
+| **MEDIUM** |
+| No `robots.txt` or sitemap. | Crawlers may miss pages.
+| Add `robots.txt` and generate `sitemap.xml` via `vite-plugin-sitemap`.
+| **MEDIUM** |
+| Favicon not defined (only logo used). | Incomplete branding, browser tab looks blank.
+| Add 32×32 PNG and SVG favicons, link in `<head>`.
+| **LOW** |
 
 ---
 
-## 13. RESPONSIVE Y MULTIPLATAFORMA
-### [MEDIO] Desbordamiento de Tablas y Tarjetas en Mobile
-*   **Problema:** La tabla de clientes e histórico desborda horizontalmente en anchos de pantalla menores a 768px, forzando un scroll horizontal de toda la ventana en lugar de un comportamiento fluido con scroll local o colapso de columnas.
-*   **Impacto:** Inutilidad del sistema en teléfonos móviles de supervisores o técnicos fuera de planta.
-*   **Recomendación:**
-    1. Aplicar la propiedad `overflow-x-auto` específicamente al contenedor contenedor de la tabla y no al body completo.
-    2. En pantallas pequeñas (menores a 640px), colapsar las columnas secundarias de la tabla de OTs y mostrarlas agrupadas en un listado vertical compacto tipo tarjeta (*card stack*).
-*   **Prioridad:** MEDIO
+## 13. Recommendations – Phased Implementation
+
+| Phase | Goal | Key Deliverables |
+| --- | --- | --- |
+| **1 – Audit (completed)** | Document current state, define priorities. | `UI_AUDIT.md` (this file). |
+| **2 – Branding** | Centralise assets, define logo variants, add favicons & manifest. |
+| **3 – Typography** | Implement single typeface, typographic scale, CSS variables. |
+| **4 – Color System** | Define semantic palette, contrast‑tested tokens, dark‑mode variants. |
+| **5 – Base Components** | Refactor Sidebar, Header, Button, Input to use design‑system tokens; add ARIA & focus styles. |
+| **6 – Dashboard** | Apply grid, reduce visual noise, standardise KPI cards, chart colours. |
+| **7 – Forms** | Consistent label‑input pairing, validation UI, error handling, a11y attributes. |
+| **8 – Responsive** | Mobile‑first breakpoints, fluid grids, responsive images. |
+| **9 – Accessibility** | Skip‑link, focus management, colour contrast fixes, screen‑reader testing. |
+| **10 – Performance** | CSS purge, image optimisation, code‑splitting, lazy loading, LCP improvements. |
+
+Each phase must be followed by:
+- Lint & TypeCheck (`npm run lint && npm run typecheck`).
+- Build verification (`npm run build`).
+- Core Web Vitals measurement (Lighthouse CI).
+- Accessibility audit (axe‑core).
+- Documentation of changes in `CHANGELOG.md`.
 
 ---
 
-## 14. COMPROMISO OPERATIVO DE CONVERSION - PRÓXIMAS ACCIONES
-Esta auditoría sienta las bases funcionales y visuales para el desarrollo incremental de las siguientes etapas. No se requiere escribir código de lógica de negocio en la etapa actual. El próximo paso consiste en consolidar la especificación técnica en el manual de estilos de sistema de diseño en `/docs/DESIGN_SYSTEM.md`.
+**End of audit**

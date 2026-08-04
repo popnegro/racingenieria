@@ -56,7 +56,7 @@ export const ShortcutsDialog: React.FC<ShortcutsDialogProps> = ({
         {/* Header */}
         <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
               <Keyboard className="w-4 h-4 stroke-[2]" />
             </div>
             <div>
@@ -128,7 +128,7 @@ export const ShortcutsDialog: React.FC<ShortcutsDialogProps> = ({
                 onStartTour();
                 onClose();
               }}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-sm hover:shadow-md transition-all whitespace-nowrap cursor-pointer flex items-center gap-1"
+              className="px-3 py-1.5 bg-primary hover:bg-primary/90 text-neutral-50 font-bold text-xs rounded-lg shadow-sm hover:shadow-md transition-all whitespace-nowrap cursor-pointer flex items-center gap-1"
             >
               <RefreshCw className="w-3 h-3 animate-spin" style={{ animationDuration: '4s' }} />
               Iniciar Tour [T]

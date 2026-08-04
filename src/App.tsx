@@ -4,7 +4,7 @@ import { CUSTOMERS, OPERATORS, CALL_LOGS, AGENDA_ITEMS, TIMELINE_EVENTS, EQUIPME
 
 // Layout and Global components
 import Sidebar from './components/Sidebar';
-import Topbar from './components/Topbar';
+import Header from './components/Header';
 import CustomerDetailDrawer from './components/CustomerDetailDrawer';
 
 // Views/Pages
@@ -37,8 +37,15 @@ export function AppContent({
   registerTab: 'ingreso' | 'kanban';
   setRegisterTab: (tab: 'ingreso' | 'kanban') => void;
 }) {
-  // Navigation states
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  // Sidebar state for mobile drawer
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+
+  // Sidebar collapsed state for desktop
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState<boolean>(false);
+
+  // ... existing state definitions unchanged ...
+
+
 
   // Central Core States (populated initially from stable deterministic mock data)
   const [customers, setCustomers] = useState<Customer[]>(CUSTOMERS);
@@ -511,15 +518,7 @@ export function AppContent({
 
       {/* Main body area container */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
-        {/* Topbar context panel */}
-        <Topbar
-          id="app-topbar"
-          activeView={activeView}
-          activeOperator={activeOperator}
-          globalSearchTerm=""
-          onGlobalSearchChange={() => {}}
-          onOpenPersonalization={() => setIsPersonalizationOpen(true)}
-        />
+        <Header />
 
         {/* Scrollable View Frame */}
         <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-zinc-50/50">
