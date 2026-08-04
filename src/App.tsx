@@ -8,6 +8,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import { ProductTourProvider, useProductTour } from './components/tour/ProductTourContext';
 import CustomerDetailDrawer from './components/CustomerDetailDrawer';
+import { MobileMenuProvider, useMobileMenu } from './context/MobileMenuContext';
 
 // Views/Pages
 import DashboardView from './pages/DashboardView';
@@ -34,11 +35,13 @@ export function AppContent({
 }) {
   // Retrieve tour controls from context
   const { startTour } = useProductTour();
-  // Sidebar state for mobile drawer
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
-
+  // Mobile menu controls (drawer)
+  const { isOpen, close, toggle } = useMobileMenu();
   // Sidebar collapsed state for desktop
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState<boolean>(false);
+
+  // Mobile drawer state is now managed by MobileMenuContext (isOpen, toggle, close)
+
 
   // ... existing state definitions unchanged ...
 
@@ -503,10 +506,11 @@ export function AppContent({
       {/* Hamburger button – visible on mobile */}
       <button
         className="lg:hidden absolute top-4 left-4 z-30 p-2 rounded-md bg-zinc-800/60 hover:bg-zinc-700 transition"
-        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        aria-label={isSidebarCollapsed ? 'Open menu' : 'Close menu'}
+        onClick={toggle}
+        aria-label={isOpen ? 'Close menu' : 'Open menu'}
+        aria-expanded={isOpen}
       >
-        {isSidebarCollapsed ? <Menu className="w-5 h-5 text-neutral-200" /> : <ChevronRight className="w-5 h-5 text-neutral-200" />}
+        {isOpen ? <ChevronRight className="w-5 h-5 text-neutral-200" /> : <Menu className="w-5 h-5 text-neutral-200" />}
       </button>
 
       {/* Sidebar navigation – drawer on mobile */}
@@ -519,13 +523,13 @@ export function AppContent({
         onChangeOperator={setActiveOperator}
         isCollapsed={isSidebarCollapsed}
         setIsCollapsed={setIsSidebarCollapsed}
-        isOpen={!isSidebarCollapsed}
-        onClose={() => setIsSidebarCollapsed(true)}
+        isOpen={isOpen}
+        onClose={close}
       />
 
       {/* Main body area container */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
-        <Header onMenuClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
+        <Header onMenuClick={toggle} />
         {/* Scrollable View Frame */}
         <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 bg-zinc-50/50">
           {renderViewContent()}
@@ -580,13 +584,15 @@ export default function App() {
   const [registerTab, setRegisterTab] = useState<'ingreso' | 'kanban'>('kanban');
 
   return (
-    <ProductTourProvider setActiveView={setActiveView} onSetRegisterTab={setRegisterTab}>
-      <AppContent
-        activeView={activeView}
-        setActiveView={setActiveView}
-        registerTab={registerTab}
-        setRegisterTab={setRegisterTab}
-      />
-    </ProductTourProvider>
+    <MobileMenuProvider>
+      <ProductTourProvider setActiveView={setActiveView} onSetRegisterTab={setRegisterTab}>
+        <AppContent
+          activeView={activeView}
+          setActiveView={setActiveView}
+          registerTab={registerTab}
+          setRegisterTab={setRegisterTab}
+        />
+      </ProductTourProvider>
+    </MobileMenuProvider>
   );
 }

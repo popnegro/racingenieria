@@ -91,7 +91,7 @@ export default function Sidebar({
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveView(item.id)}
+                onClick={() => { setActiveView(item.id); onClose(); }}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${isActive
                     ? 'bg-primary text-neutral-50 shadow-md shadow-primary/20 font-extrabold'
                     : 'hover:bg-zinc-900 text-zinc-400 hover:text-zinc-100'
