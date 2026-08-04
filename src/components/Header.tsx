@@ -2,7 +2,7 @@ import React from 'react';
 import logo from '../assets/images/rac-brand.jpg';
 import { Cpu, Bell, Moon, Sun, Menu } from 'lucide-react';
 
-export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
+export default function Header({ onMenuClick, className }: { onMenuClick?: () => void; className?: string }) {
   const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
 
   const toggleTheme = () => {
@@ -12,7 +12,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   };
 
   return (
-    <header role="banner" className="bg-primary text-neutral-50 flex items-center justify-between h-16 px-4 md:px-6">
+    <header role="banner" className={className ? `${className} bg-primary text-neutral-50 flex items-center justify-between h-16 px-4 md:px-6` : "bg-primary text-neutral-50 flex items-center justify-between h-16 px-4 md:px-6"}>
       {/* Mobile menu button */}
       <button
         aria-label="Open navigation"

@@ -3,8 +3,10 @@ import { Customer, Operator, CallLog, AgendaItem, TimelineEvent, OTEstado, Equip
 import { CUSTOMERS, OPERATORS, CALL_LOGS, AGENDA_ITEMS, TIMELINE_EVENTS, EQUIPMENTS, STOCK_ITEMS } from './data/mockData';
 
 // Layout and Global components
+import { Menu, ChevronRight } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
+import { ProductTourProvider, useProductTour } from './components/tour/ProductTourContext';
 import CustomerDetailDrawer from './components/CustomerDetailDrawer';
 
 // Views/Pages
@@ -17,14 +19,7 @@ import InsightsView from './pages/InsightsView';
 
 import { AnimatePresence } from 'motion/react';
 
-// Tour Components & Context
-import { ProductTourProvider, useProductTour } from './components/tour/ProductTourContext';
-import { TourOverlay } from './components/tour/TourOverlay';
-import { TourTooltip } from './components/tour/TourTooltip';
-import { WelcomeModal } from './components/tour/WelcomeModal';
-import { CompletionScreen } from './components/tour/CompletionScreen';
-import { ShortcutsDialog } from './components/tour/ShortcutsDialog';
-import { PersonalizationDialog } from './components/tour/PersonalizationDialog';
+// Tour functionality disabled – imports removed
 
 export function AppContent({
   activeView,
@@ -37,6 +32,8 @@ export function AppContent({
   registerTab: 'ingreso' | 'kanban';
   setRegisterTab: (tab: 'ingreso' | 'kanban') => void;
 }) {
+  // Retrieve tour controls from context
+  const { startTour } = useProductTour();
   // Sidebar state for mobile drawer
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
@@ -377,7 +374,7 @@ export function AppContent({
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [isPersonalizationOpen, setIsPersonalizationOpen] = useState(false);
 
-  const { startTour } = useProductTour();
+  // Tour functionality disabled – startTour removed
 
   React.useEffect(() => {
     const handleGlobalKeys = (e: KeyboardEvent) => {
@@ -502,9 +499,17 @@ export function AppContent({
   }, [callLogs, selectedCustomer]);
 
   return (
-    <div className="flex h-screen bg-[#fafafa] font-sans antialiased text-zinc-900 overflow-hidden relative">
-      
-      {/* Sidebar navigation */}
+    <div className="min-h-screen flex bg-background text-neutral-50 font-sans">
+      {/* Hamburger button – visible on mobile */}
+      <button
+        className="lg:hidden absolute top-4 left-4 z-30 p-2 rounded-md bg-zinc-800/60 hover:bg-zinc-700 transition"
+        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        aria-label={isSidebarCollapsed ? 'Open menu' : 'Close menu'}
+      >
+        {isSidebarCollapsed ? <Menu className="w-5 h-5 text-neutral-200" /> : <ChevronRight className="w-5 h-5 text-neutral-200" />}
+      </button>
+
+      {/* Sidebar navigation – drawer on mobile */}
       <Sidebar
         id="app-sidebar"
         activeView={activeView}
@@ -514,14 +519,15 @@ export function AppContent({
         onChangeOperator={setActiveOperator}
         isCollapsed={isSidebarCollapsed}
         setIsCollapsed={setIsSidebarCollapsed}
+        isOpen={!isSidebarCollapsed}
+        onClose={() => setIsSidebarCollapsed(true)}
       />
 
       {/* Main body area container */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
-        <Header />
-
+        <Header onMenuClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
         {/* Scrollable View Frame */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-zinc-50/50">
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 bg-zinc-50/50">
           {renderViewContent()}
         </main>
       </div>
@@ -563,23 +569,7 @@ export function AppContent({
         </svg>
       </button>
 
-      {/* Interactive Tour Components */}
-      <TourOverlay />
-      <TourTooltip />
-      <WelcomeModal />
-      <CompletionScreen />
-
-      {/* Extra Interaction Dialogs */}
-      <ShortcutsDialog
-        isOpen={isShortcutsOpen}
-        onClose={() => setIsShortcutsOpen(false)}
-        onStartTour={startTour}
-        onNavigate={setActiveView}
-      />
-      <PersonalizationDialog
-        isOpen={isPersonalizationOpen}
-        onClose={() => setIsPersonalizationOpen(false)}
-      />
+      {/* Tour UI disabled */}
 
     </div>
   );
