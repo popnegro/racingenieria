@@ -1,0 +1,25 @@
+{
+  "name": "RAC Customer Desk - Consola de Laboratorio",
+  "short_name": "RAC Desk",
+  "description": "Consola industrial de laboratorio para coordinación de calibraciones, órdenes de trabajo y métricas operativas de RAC Ingeniería.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f2b5c",
+  "orientation": "any",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}

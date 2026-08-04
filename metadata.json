@@ -1,0 +1,6 @@
+{
+  "name": "RAC Customer Desk",
+  "description": "An elegant and professional industrial laboratory coordination and work order ERP dashboard for technical diagnostics, stock subtraction, and service metrics.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
