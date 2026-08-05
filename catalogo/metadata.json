@@ -1,0 +1,6 @@
+{
+  "name": "Industrial Catalog & Inventory",
+  "description": "A premium, editorial-first technical catalog, documentation library, and maintenance hub for industrial equipment.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
