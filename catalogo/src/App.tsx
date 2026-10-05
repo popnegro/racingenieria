@@ -3,7 +3,8 @@ import { Activity, AlertCircle, ArrowRight, BarChart3, Bell, BookOpen, CalendarD
 
 type Status = 'Pendiente' | 'Contactado' | 'Requiere ingeniería' | 'Seguimiento' | 'Sin novedades';
 type Need = 'Asistencia técnica' | 'Mantenimiento' | 'Repuesto' | 'Falla reportada' | 'Consulta comercial' | 'Sin necesidad';
-type Customer = { id:string; name:string; contact:string; role:string; phone:string; zone:string; lastContact:string; equipment:string[]; status:Status; nextAction:string; note:string };\ntype ContactRecord = { id:string; customerId:string; date:string; need:Need; note:string; nextAction:string; followupDate?:string };
+type Customer = { id:string; name:string; contact:string; role:string; phone:string; zone:string; lastContact:string; equipment:string[]; status:Status; nextAction:string; note:string };
+type ContactRecord = { id:string; customerId:string; date:string; need:Need; note:string; nextAction:string; followupDate?:string };
 
 const INITIAL_CUSTOMERS: Customer[] = [
  {id:'C-001',name:'Tenaris Siderca S.A.',contact:'Juan Pérez',role:'Mantenimiento',phone:'+54 11 5555-1020',zone:'Buenos Aires Norte',lastContact:'30/09/2026',equipment:['Variador Siemens S120','Servoamplificador Fanuc'],status:'Pendiente',nextAction:'Llamar hoy',note:'Seguimiento postventa de equipos reparados.'},
@@ -35,7 +36,8 @@ function Badge({status}:{status:Status}) {
 }
 
 function App(){
- const [view,setView]=useState('inicio'); const [customers,setCustomers]=useState(INITIAL_CUSTOMERS); const [selected,setSelected]=useState<Customer|null>(null);\n const [records,setRecords]=useState<ContactRecord[]>(INITIAL_CUSTOMERS.filter(c=>c.status!=='Pendiente').map((c,i)=>({id:`R-${i+1}`,customerId:c.id,date:c.lastContact,need:c.status==='Requiere ingeniería'?'Asistencia técnica':c.status==='Sin novedades'?'Sin necesidad':'Mantenimiento',note:c.note,nextAction:c.nextAction})));
+ const [view,setView]=useState('inicio'); const [customers,setCustomers]=useState(INITIAL_CUSTOMERS); const [selected,setSelected]=useState<Customer|null>(null);
+ const [records,setRecords]=useState<ContactRecord[]>(INITIAL_CUSTOMERS.filter(c=>c.status!=='Pendiente').map((c,i)=>({id:`R-${i+1}`,customerId:c.id,date:c.lastContact,need:c.status==='Requiere ingeniería'?'Asistencia técnica':c.status==='Sin novedades'?'Sin necesidad':'Mantenimiento',note:c.note,nextAction:c.nextAction})));
  const [query,setQuery]=useState(''); const [filter,setFilter]=useState<'Todos'|Status>('Todos'); const [callStep,setCallStep]=useState(0);
  const [callCustomer,setCallCustomer]=useState<Customer|null>(null); const [need,setNeed]=useState<Need|null>(null); const [callNote,setCallNote]=useState(''); const [nextAction,setNextAction]=useState(''); const [followupDate,setFollowupDate]=useState(''); const [saved,setSaved]=useState(false); const [mobileNav,setMobileNav]=useState(false);
  const pending=customers.filter(c=>c.status==='Pendiente').length, engineering=customers.filter(c=>c.status==='Requiere ingeniería').length, followups=customers.filter(c=>c.status==='Seguimiento').length;
