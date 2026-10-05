@@ -1,328 +1,86 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
-import { Sparkles, X, Info, Search, HelpCircle, FileText, Bell, LayoutDashboard, Library, Layers } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Activity, AlertCircle, ArrowRight, BarChart3, Bell, CalendarDays, CheckCircle2, Clock3, Filter, History, Menu, Phone, Search, Settings2, ShieldCheck, Sparkles, UserRound, Users, Wrench, X } from 'lucide-react';
 
-import Sidebar from './components/Sidebar';
-import SpotlightSearch from './components/SpotlightSearch';
-import DashboardView from './components/DashboardView';
-import LibraryView from './components/LibraryView';
-import CategoriesView from './components/CategoriesView';
-import EquipmentDetailView from './components/EquipmentDetailView';
+type Status = 'Pendiente' | 'Contactado' | 'Requiere ingeniería' | 'Seguimiento' | 'Sin novedades';
+type Need = 'Asistencia técnica' | 'Mantenimiento' | 'Repuesto' | 'Falla reportada' | 'Consulta comercial' | 'Sin necesidad';
+type Customer = { id:string; name:string; contact:string; role:string; phone:string; zone:string; lastContact:string; equipment:string[]; status:Status; nextAction:string; note:string };
 
-import { EQUIPMENTS } from './data';
-import { Equipment, MaintenanceLog } from './types';
+const INITIAL_CUSTOMERS: Customer[] = [
+ {id:'C-001',name:'Tenaris Siderca S.A.',contact:'Juan Pérez',role:'Mantenimiento',phone:'+54 11 5555-1020',zone:'Buenos Aires Norte',lastContact:'30/09/2026',equipment:['Variador Siemens S120','Servoamplificador Fanuc'],status:'Pendiente',nextAction:'Llamar hoy',note:'Seguimiento postventa de equipos reparados.'},
+ {id:'C-002',name:'Aluar S.A.I.C.',contact:'María González',role:'Compras técnicas',phone:'+54 280 555-2201',zone:'Patagonia',lastContact:'28/09/2026',equipment:['ABB ACS880'],status:'Contactado',nextAction:'Sin acción',note:'Cliente contactado. Sin novedades informadas.'},
+ {id:'C-003',name:'Acindar Industria Argentina',contact:'Carlos Rodríguez',role:'Ingeniería',phone:'+54 11 5555-3044',zone:'Buenos Aires Centro',lastContact:'25/09/2026',equipment:['Altivar ATV930'],status:'Requiere ingeniería',nextAction:'Derivar consulta',note:'Solicita asistencia sobre una incidencia del equipo.'},
+ {id:'C-004',name:'YPF Química',contact:'Laura Martínez',role:'Mantenimiento',phone:'+54 11 5555-4102',zone:'Buenos Aires Sur',lastContact:'24/09/2026',equipment:['Simatic S7-1500'],status:'Seguimiento',nextAction:'08/10/2026',note:'Requiere seguimiento posterior a reparación.'},
+ {id:'C-005',name:'Toyota Argentina S.A.',contact:'Diego Fernández',role:'Servicio',phone:'+54 11 5555-5011',zone:'Buenos Aires Oeste',lastContact:'22/09/2026',equipment:['Yaskawa Sigma-7','Fanuc CNC'],status:'Pendiente',nextAction:'Llamar hoy',note:'Cliente asignado para campaña de postventa.'},
+ {id:'C-006',name:'Loma Negra S.A.',contact:'Ana Torres',role:'Mantenimiento',phone:'+54 351 555-6012',zone:'Centro',lastContact:'20/09/2026',equipment:['Fuente Kepco'],status:'Sin novedades',nextAction:'Sin acción',note:'Último contacto sin novedades.'}
+];
 
-export default function App() {
-  // Views navigation
-  const [currentView, setCurrentView] = useState<'dashboard' | 'library' | 'categories'>('dashboard');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [selectedEquipmentId, setSelectedEquipmentId] = useState<string | null>(null);
+const NAV = [
+ {id:'inicio',label:'Inicio',icon:Activity},{id:'clientes',label:'Clientes asignados',icon:Users},{id:'llamada',label:'Nueva llamada',icon:Phone},{id:'seguimientos',label:'Seguimientos',icon:CalendarDays},{id:'historial',label:'Historial',icon:History},{id:'indicadores',label:'Indicadores',icon:BarChart3}
+];
 
-  // Persistence of dynamic logs
-  const [equipments, setEquipments] = useState<Equipment[]>(() => {
-    const saved = localStorage.getItem('industrial_library_equipments');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse equipments from localStorage, fallback to default.', e);
-      }
-    }
-    return EQUIPMENTS;
-  });
-
-  // Persistence of bookmarked Favorites
-  const [favorites, setFavorites] = useState<string[]>(() => {
-    const saved = localStorage.getItem('industrial_library_favorites');
-    return saved ? JSON.parse(saved) : ['eq-sinamics-g120', 'eq-problue-flex'];
-  });
-
-  // Spotlight search overlay visibility
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  // Toast system state
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Synchronize localStorage
-  useEffect(() => {
-    localStorage.setItem('industrial_library_equipments', JSON.stringify(equipments));
-  }, [equipments]);
-
-  useEffect(() => {
-    localStorage.setItem('industrial_library_favorites', JSON.stringify(favorites));
-  }, [favorites]);
-
-  // Command palette hotkey (⌘K or Ctrl+K)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setIsSearchOpen(prev => !prev);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  // Show Toast wrapper
-  const showToast = useCallback((message: string) => {
-    setToastMessage(message);
-    const t = setTimeout(() => {
-      setToastMessage(null);
-    }, 4000);
-    return () => clearTimeout(t);
-  }, []);
-
-  // Handle bookmarked item toggling
-  const handleToggleFavorite = useCallback((id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setFavorites(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(favId => favId !== id);
-      } else {
-        return [...prev, id];
-      }
-    });
-  }, []);
-
-  // Handle registering/adding new maintenance logs
-  const handleAddMaintenanceLog = useCallback((equipmentId: string, log: MaintenanceLog) => {
-    setEquipments(prevList => {
-      return prevList.map(eq => {
-        if (eq.id === equipmentId) {
-          // If the added log type is critical, we could theoretically change status!
-          let nextStatus = eq.status;
-          if (log.type === 'corrective') {
-            nextStatus = 'operational'; // fixed
-          }
-          return {
-            ...eq,
-            status: nextStatus,
-            logs: [log, ...eq.logs]
-          };
-        }
-        return eq;
-      });
-    });
-  }, []);
-
-  // Quick select category from dashboard
-  const handleSelectCategory = useCallback((catId: string | null) => {
-    setSelectedCategoryId(catId);
-    setCurrentView('library');
-    setSelectedEquipmentId(null);
-  }, []);
-
-  // Select single equipment to view details
-  const handleSelectEquipment = useCallback((id: string) => {
-    setSelectedEquipmentId(id);
-  }, []);
-
-  return (
-    <div id="app-root" className="flex bg-[#FDFDFD] text-[#111111] min-h-screen font-sans selection:bg-[#111111] selection:text-white">
-      
-      {/* 1. Sidebar minimalista */}
-      <Sidebar 
-        currentView={currentView}
-        onViewChange={(view) => {
-          setCurrentView(view);
-          setSelectedEquipmentId(null); // Clear selected item when moving views
-        }}
-        onOpenSearch={() => setIsSearchOpen(true)}
-        favoritesCount={favorites.length}
-      />
-
-      {/* Main Content Pane */}
-      <div className="flex-1 flex flex-col min-h-screen bg-[#FFFFFF] relative">
-        
-        {/* Sticky Header */}
-        <header className="sticky top-0 z-10 bg-[#FFFFFF]/80 backdrop-blur-md border-b border-[#F0F0F0] px-4 sm:px-8 py-3.5 sm:py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="lg:hidden w-7 h-7 rounded bg-[#111111] flex items-center justify-center text-white font-mono font-bold text-xs tracking-tight shrink-0">
-              ST
-            </div>
-            <span className="text-[10px] font-bold text-[#999999] font-mono tracking-widest uppercase truncate max-w-[120px] sm:max-w-none">
-              CATÁLOGO INDUSTRIAL
-            </span>
-            <span className="hidden sm:inline text-[#EEEEEE] font-light">|</span>
-            <span className="hidden sm:inline text-xs text-[#717171] font-medium truncate">Búsqueda directa e indexación de planos</span>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            {/* Quick search badge */}
-            <button 
-              onClick={() => setIsSearchOpen(true)}
-              className="px-2.5 py-1 bg-[#FAFAFA] hover:bg-[#F5F5F5] border border-[#EEEEEE] rounded text-[11px] font-semibold text-[#111111] transition-colors cursor-pointer flex items-center gap-1.5"
-            >
-              <Search className="w-3.5 h-3.5 text-[#717171]" />
-              <span className="hidden xs:inline">Spotlight</span>
-            </button>
-            
-            {/* Helpful user info badge */}
-            <div className="flex items-center gap-1.5 text-[#717171]">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span className="text-[10px] sm:text-[11px] font-semibold truncate max-w-[80px] xs:max-w-[120px] sm:max-w-none">
-                grasso.luis@gmail.com
-              </span>
-            </div>
-          </div>
-        </header>
-
-        {/* Scrollable Core View Body Container */}
-        <main className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8 pb-24 lg:pb-8">
-          <AnimatePresence mode="wait">
-            {selectedEquipmentId ? (
-              // Detailed Equipment View (Apple Support Editorial layout)
-              <motion.div
-                key={`detail-${selectedEquipmentId}`}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                transition={{ duration: 0.18 }}
-              >
-                <EquipmentDetailView 
-                  equipmentId={selectedEquipmentId}
-                  onBack={() => setSelectedEquipmentId(null)}
-                  favorites={favorites}
-                  onToggleFavorite={handleToggleFavorite}
-                  onSelectEquipment={handleSelectEquipment}
-                  onAddMaintenanceLog={handleAddMaintenanceLog}
-                  onShowToast={showToast}
-                  equipments={equipments}
-                />
-              </motion.div>
-            ) : currentView === 'dashboard' ? (
-              // Pristine Dashboard overview
-              <motion.div
-                key="dashboard"
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                transition={{ duration: 0.18 }}
-              >
-                <DashboardView 
-                  onSelectEquipment={handleSelectEquipment}
-                  onViewChange={setCurrentView}
-                  onSelectCategory={handleSelectCategory}
-                  onOpenSearch={() => setIsSearchOpen(true)}
-                  favorites={favorites}
-                />
-              </motion.div>
-            ) : currentView === 'library' ? (
-              // Editorial VFD/Sensor catalog with search filters
-              <motion.div
-                key="library"
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                transition={{ duration: 0.18 }}
-              >
-                <LibraryView 
-                  onSelectEquipment={handleSelectEquipment}
-                  selectedCategory={selectedCategoryId}
-                  onSelectCategory={setSelectedCategoryId}
-                  favorites={favorites}
-                  onToggleFavorite={handleToggleFavorite}
-                />
-              </motion.div>
-            ) : (
-              // Structured grid of 27 technical categories
-              <motion.div
-                key="categories"
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                transition={{ duration: 0.18 }}
-              >
-                <CategoriesView 
-                  onSelectCategory={handleSelectCategory}
-                  onViewChange={setCurrentView}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </main>
-
-        {/* 4. Mobile Bottom Navigation Bar (Visible only on mobile/tablet) */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#EEEEEE] px-4 py-2.5 flex items-center justify-around shadow-lg">
-          <button
-            onClick={() => {
-              setCurrentView('dashboard');
-              setSelectedEquipmentId(null);
-            }}
-            className={`flex flex-col items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
-              currentView === 'dashboard' && !selectedEquipmentId ? 'text-zinc-950 font-semibold' : 'text-[#717171]'
-            }`}
-          >
-            <LayoutDashboard className="w-4.5 h-4.5" />
-            <span>Dashboard</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setCurrentView('library');
-              setSelectedEquipmentId(null);
-            }}
-            className={`flex flex-col items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
-              currentView === 'library' && !selectedEquipmentId ? 'text-zinc-950 font-semibold' : 'text-[#717171]'
-            }`}
-          >
-            <Library className="w-4.5 h-4.5" />
-            <span>Biblioteca</span>
-          </button>
-
-          <button
-            onClick={() => setIsSearchOpen(true)}
-            className="flex flex-col items-center gap-1 text-[10px] font-medium text-[#717171] cursor-pointer"
-          >
-            <Search className="w-4.5 h-4.5" />
-            <span>Buscar</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setCurrentView('categories');
-              setSelectedEquipmentId(null);
-            }}
-            className={`flex flex-col items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
-              currentView === 'categories' && !selectedEquipmentId ? 'text-zinc-950 font-semibold' : 'text-[#717171]'
-            }`}
-          >
-            <Layers className="w-4.5 h-4.5" />
-            <span>Categorías</span>
-          </button>
-        </div>
-
-      </div>
-
-      {/* 2. Spotlight Command Palette Search Overlay */}
-      <SpotlightSearch 
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        onSelectEquipment={handleSelectEquipment}
-      />
-
-      {/* 3. Global Premium Toast notification banner */}
-      <AnimatePresence>
-        {toastMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 p-4 bg-slate-950 text-white rounded-xl shadow-xl border border-white/10 flex items-center gap-3 max-w-sm"
-          >
-            <Sparkles className="w-5 h-5 text-amber-400 shrink-0" />
-            <p className="text-xs font-semibold leading-normal">{toastMessage}</p>
-            <button 
-              onClick={() => setToastMessage(null)}
-              className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-    </div>
-  );
+function Badge({status}:{status:Status}) {
+ const styles:Record<Status,string>={Pendiente:'bg-amber-50 text-amber-700 border-amber-200',Contactado:'bg-blue-50 text-blue-700 border-blue-200','Requiere ingeniería':'bg-red-50 text-red-700 border-red-200',Seguimiento:'bg-violet-50 text-violet-700 border-violet-200','Sin novedades':'bg-emerald-50 text-emerald-700 border-emerald-200'};
+ return <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${styles[status]}`}><span className="h-1.5 w-1.5 rounded-full bg-current"/>{status}</span>;
 }
+
+function App(){
+ const [view,setView]=useState('inicio'); const [customers,setCustomers]=useState(INITIAL_CUSTOMERS); const [selected,setSelected]=useState<Customer|null>(null);
+ const [query,setQuery]=useState(''); const [filter,setFilter]=useState<'Todos'|Status>('Todos'); const [callStep,setCallStep]=useState(0);
+ const [callCustomer,setCallCustomer]=useState<Customer|null>(INITIAL_CUSTOMERS[0]); const [need,setNeed]=useState<Need|null>(null); const [saved,setSaved]=useState(false); const [mobileNav,setMobileNav]=useState(false);
+ const pending=customers.filter(c=>c.status==='Pendiente').length, engineering=customers.filter(c=>c.status==='Requiere ingeniería').length, followups=customers.filter(c=>c.status==='Seguimiento').length;
+ const filtered=useMemo(()=>customers.filter(c=>(!query||`${c.name} ${c.contact} ${c.zone}`.toLowerCase().includes(query.toLowerCase()))&&(filter==='Todos'||c.status===filter)),[customers,query,filter]);
+ const navigate=(id:string)=>{setView(id);setMobileNav(false)}; const openCall=(c:Customer)=>{setCallCustomer(c);setCallStep(0);setNeed(null);setSaved(false);setView('llamada')};
+ const saveCall=()=>{if(!callCustomer)return; const nextStatus:Status=need==='Sin necesidad'?'Sin novedades':need?'Requiere ingeniería':'Contactado'; setCustomers(p=>p.map(c=>c.id===callCustomer.id?{...c,status:nextStatus,lastContact:'05/10/2026',nextAction:need&&need!=='Sin necesidad'?'Derivar a Ingeniería':'Sin acción'}:c));setSaved(true)};
+ return <div className="min-h-screen bg-slate-50 text-slate-900">
+  <aside className={`fixed inset-y-0 left-0 z-40 w-64 border-r border-slate-200 bg-white transition-transform lg:translate-x-0 ${mobileNav?'translate-x-0':'-translate-x-full'}`}>
+   <div className="flex h-16 items-center gap-3 border-b border-slate-200 px-5"><div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-950 text-sm font-black text-white">RAC</div><div><div className="text-sm font-extrabold">RAC Ingeniería</div><div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Postventa</div></div></div>
+   <nav className="px-3 py-4"><p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Operación</p>{NAV.map(n=>{const I=n.icon;return <button key={n.id} onClick={()=>navigate(n.id)} className={`mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold ${view===n.id?'bg-slate-950 text-white':'text-slate-600 hover:bg-slate-100'}`}><I size={17}/>{n.label}</button>})}</nav>
+   <div className="absolute bottom-0 w-full border-t border-slate-200 p-4"><div className="flex items-center gap-3 rounded-xl bg-slate-50 p-3"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200"><UserRound size={17}/></div><div><p className="text-xs font-bold">Asistente de postventa</p><p className="text-[10px] text-slate-400">Zona asignada</p></div></div></div>
+  </aside>
+  {mobileNav&&<div className="fixed inset-0 z-30 bg-slate-950/30 lg:hidden" onClick={()=>setMobileNav(false)}/>}
+  <div className="lg:pl-64"><header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur md:px-7"><div className="flex items-center gap-3"><button className="rounded-lg p-2 hover:bg-slate-100 lg:hidden" onClick={()=>setMobileNav(true)}><Menu size={20}/></button><div><p className="text-xs text-slate-400">RAC Ingeniería / Postventa</p><p className="text-sm font-bold">{NAV.find(n=>n.id===view)?.label||'Inicio'}</p></div></div><div className="flex gap-1"><button className="rounded-lg p-2.5 text-slate-500 hover:bg-slate-100" aria-label="Notificaciones"><Bell size={18}/></button><button className="rounded-lg p-2.5 text-slate-500 hover:bg-slate-100" aria-label="Configuración"><Settings2 size={18}/></button></div></header>
+   <main className="mx-auto max-w-[1400px] p-4 md:p-7">
+    {view==='inicio'&&<Dashboard onNavigate={navigate} customers={customers} pending={pending} engineering={engineering} followups={followups} openCall={openCall}/>}
+    {view==='clientes'&&<Customers customers={filtered} query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} onSelect={setSelected} onCall={openCall}/>}
+    {view==='llamada'&&<CallView customer={callCustomer} step={callStep} setStep={setCallStep} need={need} setNeed={setNeed} saved={saved} onSave={saveCall} onCustomers={()=>navigate('clientes')}/>}
+    {view==='seguimientos'&&<Followups customers={customers} onCall={openCall}/>}
+    {view==='historial'&&<History customers={customers}/>} {view==='indicadores'&&<Indicators customers={customers}/>}
+   </main>
+  </div>
+  {selected&&<CustomerDrawer customer={selected} onClose={()=>setSelected(null)} onCall={()=>{setSelected(null);openCall(selected)}}/>}
+ </div>;
+}
+
+function PageTitle({eyebrow,title,description,action}:{eyebrow?:string;title:string;description?:string;action?:React.ReactNode}){return <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end"><div>{eyebrow&&<p className="mb-1 text-xs font-bold uppercase tracking-widest text-blue-600">{eyebrow}</p>}<h1 className="text-2xl font-extrabold tracking-tight text-slate-950 md:text-3xl">{title}</h1>{description&&<p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-500">{description}</p>}</div>{action}</div>}
+
+function Dashboard({onNavigate,customers,pending,engineering,followups,openCall}:any){
+ const priority=customers.filter((c:Customer)=>c.status==='Pendiente'||c.status==='Requiere ingeniería');
+ const cards=[['Clientes pendientes',pending,'Llamar hoy',Phone,'text-amber-600'],['Requieren ingeniería',engineering,'Derivaciones abiertas',Wrench,'text-red-600'],['Seguimientos',followups,'Próximas acciones',CalendarDays,'text-violet-600'],['Contactos registrados',128,'Este mes',CheckCircle2,'text-emerald-600']];
+ return <div><PageTitle eyebrow="Operación de hoy" title="Centro de postventa" description="Prepará, realizá y registrá el contacto con clientes sin invadir la intervención del área técnica." action={<button onClick={()=>onNavigate('llamada')} className="inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-bold text-white"><Phone size={16}/> Nueva llamada</button>}/>
+ <div className="mb-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{cards.map(([l,v,s,I,c]:any)=><div key={l} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex justify-between"><div><p className="text-xs font-semibold text-slate-500">{l}</p><p className="mt-2 text-3xl font-extrabold">{v}</p><p className="mt-1 text-xs text-slate-400">{s}</p></div><div className={`rounded-lg bg-slate-50 p-2.5 ${c}`}><I size={19}/></div></div></div>)}</div>
+ <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]"><section className="rounded-xl border border-slate-200 bg-white shadow-sm"><div className="flex items-center justify-between border-b border-slate-100 px-5 py-4"><div><h2 className="text-sm font-extrabold">Contactos prioritarios</h2><p className="mt-0.5 text-xs text-slate-400">Clientes asignados que requieren una acción.</p></div><button onClick={()=>onNavigate('clientes')} className="text-xs font-bold text-blue-600">Ver clientes <ArrowRight className="ml-1 inline" size={13}/></button></div><div className="divide-y divide-slate-100">{priority.slice(0,5).map((c:Customer)=><div key={c.id} className="flex items-center justify-between gap-4 px-5 py-4"><div className="min-w-0"><p className="truncate text-sm font-bold">{c.name}</p><p className="mt-1 text-xs text-slate-400">{c.zone} · {c.contact} · {c.role}</p></div><div className="flex shrink-0 items-center gap-3"><Badge status={c.status}/><button onClick={()=>openCall(c)} className="rounded-lg border border-slate-200 p-2"><Phone size={15}/></button></div></div>)}</div></section>
+ <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><div className="mb-5 flex gap-3"><div className="rounded-lg bg-blue-50 p-2 text-blue-600"><ShieldCheck size={19}/></div><div><h2 className="text-sm font-extrabold">Límite de rol</h2><p className="mt-1 text-xs leading-5 text-slate-500">La herramienta acompaña al asistente y deriva cuando la consulta requiere criterio técnico.</p></div></div><div className="space-y-3 text-xs"><div className="flex gap-2 rounded-lg bg-emerald-50 p-3 text-emerald-800"><CheckCircle2 size={15}/><span>Detectar necesidad y registrar contexto.</span></div><div className="flex gap-2 rounded-lg bg-amber-50 p-3 text-amber-800"><AlertCircle size={15}/><span>No diagnosticar, presupuestar ni emitir criterio técnico.</span></div><div className="flex gap-2 rounded-lg bg-blue-50 p-3 text-blue-800"><ArrowRight size={15}/><span>Derivar la consulta al responsable correspondiente.</span></div></div></section></div></div>;
+}
+
+function Customers({customers,query,setQuery,filter,setFilter,onSelect,onCall}:any){
+ const filters=('Todos, Pendiente, Contactado, Requiere ingeniería, Seguimiento, Sin novedades'.split(', ') as ('Todos'|Status)[]);
+ return <div><PageTitle eyebrow="Cartera asignada" title="Clientes asignados" description="Una vista operativa para saber a quién llamar, por qué y cuál es la próxima acción."/><div className="mb-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:flex-row"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar cliente, contacto o zona..." className="w-full rounded-lg bg-slate-50 py-2.5 pl-10 pr-3 text-sm outline-none ring-1 ring-transparent focus:ring-blue-500"/></div><div className="flex gap-2 overflow-x-auto"><Filter size={17} className="mt-2.5 shrink-0 text-slate-400"/>{filters.map(f=><button key={f} onClick={()=>setFilter(f)} className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs font-bold ${filter===f?'bg-slate-950 text-white':'bg-slate-50 text-slate-600'}`}>{f}</button>)}</div></div><div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"><div className="hidden grid-cols-[1.5fr_1fr_1fr_1fr_auto] gap-4 border-b border-slate-100 bg-slate-50 px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 md:grid"><span>Cliente</span><span>Zona</span><span>Último contacto</span><span>Estado</span><span></span></div>{customers.map((c:Customer)=><div key={c.id} className="grid gap-3 border-b border-slate-100 px-5 py-4 last:border-0 md:grid-cols-[1.5fr_1fr_1fr_1fr_auto] md:items-center"><button onClick={()=>onSelect(c)} className="text-left"><p className="truncate text-sm font-bold hover:text-blue-600">{c.name}</p><p className="mt-1 text-xs text-slate-400">{c.contact} · {c.role}</p></button><p className="text-xs text-slate-500">{c.zone}</p><p className="text-xs text-slate-500">{c.lastContact}</p><Badge status={c.status}/><button onClick={()=>onCall(c)} className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white"><Phone size={14}/> Llamar</button></div>)}</div></div>;
+}
+
+function CallView({customer,step,setStep,need,setNeed,saved,onSave,onCustomers}:any){
+ if(!customer)return null; const needs:Need[]=['Asistencia técnica','Mantenimiento','Repuesto','Falla reportada','Consulta comercial','Sin necesidad'];
+ return <div><PageTitle eyebrow="Postventa / contacto" title="Nueva llamada" description="Detectá la necesidad, registrá el contexto y derivá cuando corresponda." action={<button onClick={onCustomers} className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold">Cambiar cliente</button>}/><div className="grid gap-5 xl:grid-cols-[0.9fr_1.5fr]"><section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">Cliente</p><h2 className="text-lg font-extrabold">{customer.name}</h2><p className="mt-1 text-sm text-slate-500">{customer.contact} · {customer.role}</p><p className="mt-3 text-xs font-semibold text-slate-500">{customer.zone} · {customer.phone}</p><div className="mt-5 border-t border-slate-100 pt-4"><p className="text-xs font-bold">Contexto disponible</p><ul className="mt-3 space-y-2">{customer.equipment.map(e=><li key={e} className="flex items-center gap-2 text-xs text-slate-600"><Wrench size={13} className="text-slate-400"/>{e}</li>)}</ul></div><div className="mt-5 rounded-lg bg-slate-50 p-3"><p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Última observación</p><p className="mt-1 text-xs leading-5 text-slate-600">{customer.note}</p></div></section>
+ <section className="rounded-xl border border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-100 px-6 py-5"><div className="flex items-center gap-2 text-xs font-bold text-slate-400"><span className={`rounded-full px-2 py-1 ${step>=0?'bg-slate-950 text-white':''}`}>1</span> Preparar <span>→</span><span className={`rounded-full px-2 py-1 ${step>=1?'bg-slate-950 text-white':''}`}>2</span> Necesidad <span>→</span><span className={`rounded-full px-2 py-1 ${step>=2?'bg-slate-950 text-white':''}`}>3</span> Cierre</div></div><div className="p-6">
+ {step===0&&<div><h2 className="text-lg font-extrabold">Preparar el contacto</h2><p className="mt-1 text-sm text-slate-500">Objetivo: seguimiento postventa y detección de necesidades.</p><div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900"><div className="flex gap-3"><Sparkles size={18}/><div><p className="font-bold">Guía para la llamada</p><p className="mt-1 leading-6">Consultar cómo fue la experiencia con el servicio y si existe alguna necesidad que deba ser atendida.</p></div></div></div><button onClick={()=>setStep(1)} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-bold text-white">Iniciar registro <ArrowRight size={16}/></button></div>}
+ {step===1&&<div><h2 className="text-lg font-extrabold">¿Qué necesidad manifiesta el cliente?</h2><p className="mt-1 text-sm text-slate-500">No realizar diagnóstico ni presupuesto. Registrar y derivar.</p><div className="mt-5 grid gap-2 sm:grid-cols-2">{needs.map(n=><button key={n} onClick={()=>setNeed(n)} className={`rounded-xl border p-4 text-left text-sm font-bold ${need===n?'border-slate-950 bg-slate-950 text-white':'border-slate-200'}`}>{n}</button>)}</div><button disabled={!need} onClick={()=>setStep(2)} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-40">Continuar <ArrowRight size={16}/></button></div>}
+ {step===2&&!saved&&<div><h2 className="text-lg font-extrabold">Cerrar contacto</h2><div className={`mt-5 rounded-xl p-5 ${need==='Sin necesidad'?'bg-emerald-50 text-emerald-900':'bg-red-50 text-red-900'}`}><div className="flex gap-3"><ShieldCheck size={20}/><div><p className="font-bold">{need==='Sin necesidad'?'Sin novedades':'Requiere intervención del área técnica'}</p><p className="mt-1 text-sm leading-6">{need==='Sin necesidad'?'Registrar contacto y cerrar el seguimiento.':'Registrar la necesidad y derivar al responsable técnico. El asistente no debe diagnosticar ni presupuestar.'}</p></div></div></div><button onClick={onSave} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-bold text-white"><CheckCircle2 size={16}/> Registrar contacto</button></div>}
+ {saved&&<div className="py-10 text-center"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600"><CheckCircle2/></div><h2 className="mt-4 text-lg font-extrabold">Contacto registrado</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">La interacción quedó registrada y el próximo paso está definido según la necesidad detectada.</p><button onClick={()=>{setStep(0);setNeed(null);setSaved(false)}} className="mt-5 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-bold">Nueva llamada</button></div>}
+ </div></section></div></div>;
+}
+
+function Followups({customers,onCall}:{customers:Customer[];onCall:(c:Customer)=>void}){const rows=customers.filter(c=>c.nextAction!=='Sin acción');return <div><PageTitle eyebrow="Próximas acciones" title="Seguimientos" description="Tareas que quedaron abiertas después del contacto con el cliente."/><div className="grid gap-3">{rows.map(c=><div key={c.id} className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between"><div><div className="flex items-center gap-2"><Clock3 size={16} className="text-violet-600"/><p className="text-sm font-bold">{c.name}</p></div><p className="mt-1 text-xs text-slate-500">{c.nextAction} · {c.note}</p></div><button onClick={()=>onCall(c)} className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white">Abrir contacto</button></div>)}</div></div>}
+function History({customers}:{customers:Customer[]}){return <div><PageTitle eyebrow="Trazabilidad" title="Historial de contactos" description="Registro resumido de interacciones y derivaciones."/><div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">{customers.map(c=><div key={c.id} className="flex gap-4 border-b border-slate-100 p-5 last:border-0"><div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500"><Phone size={14}/></div><div className="flex-1"><div className="flex flex-col justify-between gap-1 sm:flex-row"><p className="text-sm font-bold">{c.name}</p><span className="text-xs text-slate-400">{c.lastContact}</span></div><p className="mt-1 text-xs leading-5 text-slate-500">{c.note}</p></div><Badge status={c.status}/></div>)}</div></div>}
+function Indicators({customers}:{customers:Customer[]}){const total=customers.length,derived=customers.filter(c=>c.status==='Requiere ingeniería').length,resolved=customers.filter(c=>c.status==='Sin novedades').length;return <div><PageTitle eyebrow="Gestión" title="Indicadores" description="Métricas conceptuales para medir cobertura, derivaciones y seguimiento."/><div className="grid gap-4 md:grid-cols-3"><Metric label="Cobertura de cartera" value="82%" detail="Clientes contactados"/><Metric label="Derivaciones técnicas" value={String(derived)} detail={`${Math.round(derived/total*100)}% de la cartera actual`}/><Metric label="Sin novedades" value={String(resolved)} detail="Contactos cerrados"/></div><div className="mt-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex gap-3"><BarChart3 className="text-blue-600"/><div><h2 className="text-sm font-extrabold">Evolución posible</h2><p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">La interfaz puede conectarse con clientes, asignaciones, historial y derivaciones reales, manteniendo separada la información técnica que corresponde a Ingeniería.</p></div></div></div></div>}
+function Metric({label,value,detail}:{label:string;value:string;detail:string}){return <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-semibold text-slate-500">{label}</p><p className="mt-2 text-3xl font-extrabold">{value}</p><p className="mt-1 text-xs text-slate-400">{detail}</p></div>}
+function CustomerDrawer({customer,onClose,onCall}:{customer:Customer;onClose:()=>void;onCall:()=>void}){return <><div className="fixed inset-0 z-40 bg-slate-950/25" onClick={onClose}/><aside className="fixed right-0 top-0 z-50 h-full w-full max-w-lg overflow-y-auto border-l border-slate-200 bg-white shadow-2xl"><div className="flex items-center justify-between border-b border-slate-200 p-5"><div><p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Ficha de cliente</p><h2 className="mt-1 text-lg font-extrabold">{customer.name}</h2></div><button onClick={onClose} className="rounded-lg p-2 hover:bg-slate-100"><X size={18}/></button></div><div className="space-y-6 p-5"><div><Badge status={customer.status}/><p className="mt-3 text-sm font-bold">{customer.contact}</p><p className="text-xs text-slate-500">{customer.role} · {customer.zone}</p><p className="mt-2 text-xs text-slate-500">{customer.phone}</p></div><div><p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Equipamiento registrado</p><div className="mt-2 space-y-2">{customer.equipment.map(e=><div key={e} className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-xs font-semibold"><Wrench size={14} className="text-slate-400"/>{e}</div>)}</div></div><div><p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Contexto postventa</p><div className="mt-2 rounded-lg border border-slate-200 p-4 text-xs leading-5 text-slate-600">{customer.note}</div></div><button onClick={onCall} className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-3 text-sm font-bold text-white"><Phone size={16}/> Iniciar llamada</button></div></aside></>}
+export default App;
