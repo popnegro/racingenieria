@@ -16,7 +16,7 @@ const INITIAL_CUSTOMERS: Customer[] = [
 ];
 
 function needsEngineering(need:Need|null){return need==='Asistencia técnica'||need==='Mantenimiento'||need==='Repuesto'||need==='Falla reportada'||need==='Solicitud de presupuesto'}
-function whatsappHref(customer:Customer,note:string,need:Need){const equipment=customer.equipment.join(', ');const body=[`SOLICITUD DE INGENIERÍA`,`Cliente: ${customer.name}`,`Contacto: ${customer.contact} — ${customer.phone}`,`Zona: ${customer.zone}`,`Equipo: ${equipment}`,`Necesidad: ${need}`,`Información aportada por el cliente: ${note.trim()||'Sin observaciones adicionales.'}`,`Derivado por: Postventa`].join('\\n');return `https://wa.me/${customer.phone.replace(/\\D/g,'')}?text=${encodeURIComponent(body)}`}
+function whatsappHref(customer:Customer,note:string,need:Need){const equipment=customer.equipment.join(', ');const body=[`SOLICITUD DE INGENIERÍA`,`Cliente: ${customer.name}`,`Contacto: ${customer.contact} — ${customer.phone}`,`Zona: ${customer.zone}`,`Equipo: ${equipment}`,`Necesidad: ${need}`,`Información aportada por el cliente: ${note.trim()||'Sin observaciones adicionales.'}`,`Derivado por: Postventa`].join('\n');return `https://api.whatsapp.com/send?text=${encodeURIComponent(body)}`}
 
 const NAV = [
  {id:'inicio',label:'Inicio',icon:Activity},{id:'clientes',label:'Clientes asignados',icon:Users},{id:'llamada',label:'Nueva llamada',icon:Phone},{id:'seguimientos',label:'Seguimientos',icon:CalendarDays},{id:'historial',label:'Historial',icon:HistoryIcon},{id:'indicadores',label:'Indicadores',icon:BarChart3},{id:'biblioteca',label:'Biblioteca',icon:BookOpen}
