@@ -55,9 +55,9 @@ function App(){
    <main className="mx-auto max-w-[1400px] p-4 md:p-7">
     {view==='inicio'&&<Dashboard onNavigate={navigate} customers={customers} pending={pending} engineering={engineering} followups={followups} openCall={openCall}/>}
     {view==='clientes'&&<Customers customers={filtered} query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} onSelect={setSelected} onCall={openCall}/>}
-    {view==='llamada'&&<CallView customer={callCustomer} customers={customers} onSelectCustomer={openCall} step={callStep} setStep={setCallStep} need={need} setNeed={setNeed} saved={saved} onSave={saveCall} onCustomers={()=>navigate('clientes')}/>}
-    {view==='seguimientos'&&<Followups customers={customers} onCall={openCall}/>}
-    {view==='historial'&&<ContactHistory customers={customers}/>} {view==='indicadores'&&<Indicators customers={customers}/>} {view==='biblioteca'&&<Library/>}
+    {view==='llamada'&&<CallView customer={callCustomer} customers={customers} onSelectCustomer={openCall} step={callStep} setStep={setCallStep} need={need} setNeed={setNeed} note={callNote} setNote={setCallNote} nextAction={nextAction} setNextAction={setNextAction} followupDate={followupDate} setFollowupDate={setFollowupDate} saved={saved} onSave={saveCall} onCustomers={()=>navigate('clientes')}/>}
+    {view==='seguimientos'&&<Followups customers={customers} records={records} onCall={openCall}/>}
+    {view==='historial'&&<ContactHistory customers={customers} records={records}/>} {view==='indicadores'&&<Indicators customers={customers} records={records}/>} {view==='biblioteca'&&<Library onUse={openCall}/>}
    </main>
   </div>
   {selected&&<CustomerDrawer customer={selected} onClose={()=>setSelected(null)} onCall={()=>{setSelected(null);openCall(selected)}}/>}
