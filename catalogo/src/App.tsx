@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Activity, AlertCircle, ArrowRight, BarChart3, Bell, BookOpen, CalendarDays, CheckCircle2, Clock3, Filter, History as HistoryIcon, Menu, MessageCircle, Phone, Search, Settings2, ShieldCheck, Sparkles, UserRound, Users, Wrench, X } from 'lucide-react';
 
 type Status = 'Pendiente' | 'Contactado' | 'Requiere ingeniería' | 'Seguimiento' | 'Sin novedades';
@@ -39,9 +39,13 @@ function Badge({status}:{status:Status}) {
  return <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${styles[status]}`}><span className="h-1.5 w-1.5 rounded-full bg-current"/>{status}</span>;
 }
 
+const STORAGE_KEY='racingenieria:postventa:pmv:v1';
+function readPersisted<T>(key:string,fallback:T):T{try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw) as T:fallback}catch{return fallback}}
 function App(){
- const [view,setView]=useState('inicio'); const [customers,setCustomers]=useState(INITIAL_CUSTOMERS); const [selected,setSelected]=useState<Customer|null>(null);
- const [records,setRecords]=useState<ContactRecord[]>(INITIAL_CUSTOMERS.filter(c=>c.status!=='Pendiente').map((c,i)=>({id:`R-${i+1}`,customerId:c.id,date:c.lastContact,need:c.status==='Requiere ingeniería'?'Asistencia técnica':c.status==='Sin novedades'?'Sin necesidad':'Mantenimiento',note:c.note,nextAction:c.nextAction})));
+ const [view,setView]=useState('inicio'); const [customers,setCustomers]=useState<Customer[]>(()=>readPersisted(`${STORAGE_KEY}:customers`,INITIAL_CUSTOMERS)); const [selected,setSelected]=useState<Customer|null>(null);
+ const [records,setRecords]=useState<ContactRecord[]>(()=>readPersisted(`${STORAGE_KEY}:records`,INITIAL_CUSTOMERS.filter(c=>c.status!=='Pendiente').map((c,i)=>({id:`R-${i+1}`,customerId:c.id,date:c.lastContact,need:c.status==='Requiere ingeniería'?'Asistencia técnica':c.status==='Sin novedades'?'Sin necesidad':'Mantenimiento',note:c.note,nextAction:c.nextAction}))));
+ useEffect(()=>{try{localStorage.setItem(`${STORAGE_KEY}:customers`,JSON.stringify(customers));localStorage.setItem(`${STORAGE_KEY}:records`,JSON.stringify(records))}catch{}}
+ ,[customers,records]);
  const [query,setQuery]=useState(''); const [filter,setFilter]=useState<'Todos'|Status>('Todos'); const [callStep,setCallStep]=useState(0);
  const [callCustomer,setCallCustomer]=useState<Customer|null>(null); const [need,setNeed]=useState<Need|null>(null); const [whatsappPrepared,setWhatsappPrepared]=useState(false); const [quoteRequest,setQuoteRequest]=useState<QuoteRequest>({brand:'',model:'',quantity:'',request:'',work:'',location:'',urgency:'',photos:'No informado',documents:'No informado',observations:''}); const [callNote,setCallNote]=useState(''); const [nextAction,setNextAction]=useState(''); const [followupDate,setFollowupDate]=useState(''); const [saved,setSaved]=useState(false); const [mobileNav,setMobileNav]=useState(false);
  const pending=customers.filter(c=>c.status==='Pendiente').length, engineering=customers.filter(c=>c.status==='Requiere ingeniería').length, followups=customers.filter(c=>c.status==='Seguimiento').length;
