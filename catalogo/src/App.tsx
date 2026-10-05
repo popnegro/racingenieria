@@ -15,7 +15,7 @@ const INITIAL_CUSTOMERS: Customer[] = [
 ];
 
 const NAV = [
- {id:'inicio',label:'Inicio',icon:Activity},{id:'clientes',label:'Clientes asignados',icon:Users},{id:'llamada',label:'Nueva llamada',icon:Phone},{id:'seguimientos',label:'Seguimientos',icon:CalendarDays},{id:'historial',label:'Historial',icon:HistoryIcon},{id:'biblioteca',label:'Biblioteca',icon:BookOpen},{id:'indicadores',label:'Indicadores',icon:BarChart3}
+ {id:'inicio',label:'Inicio',icon:Activity},{id:'biblioteca',label:'Biblioteca',icon:BookOpen},{id:'clientes',label:'Clientes asignados',icon:Users},{id:'llamada',label:'Nueva llamada',icon:Phone},{id:'seguimientos',label:'Seguimientos',icon:CalendarDays},{id:'historial',label:'Historial',icon:HistoryIcon},{id:'indicadores',label:'Indicadores',icon:BarChart3}
 ];
 
 function Badge({status}:{status:Status}) {
